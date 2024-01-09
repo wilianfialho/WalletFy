@@ -4,6 +4,7 @@ from bip32utils import BIP32Key
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from binascii import hexlify, unhexlify
+import qrcode
 
 class WalletGeneratorApp:
     def __init__(self, root):
@@ -13,11 +14,13 @@ class WalletGeneratorApp:
         self.label_mnemonic = tk.Label(root, text="Frase Mnemônica:")
         self.entry_mnemonic = tk.Entry(root, width=40)
         self.button_generate = tk.Button(root, text="Gerar Endereço", command=self.generate_and_display)
+        self.button_validate = tk.Button(root, text="Validar Frase", command=self.validate_mnemonic)
 
         # Configuração da interface gráfica
         self.label_mnemonic.grid(row=0, column=0, padx=10, pady=10, sticky=tk.W)
         self.entry_mnemonic.grid(row=0, column=1, padx=10, pady=10)
         self.button_generate.grid(row=1, column=0, columnspan=2, pady=10)
+        self.button_validate.grid(row=2, column=0, columnspan=2, pady=5)
 
     def generate_seed(self, mnemonic):
         try:
@@ -40,6 +43,25 @@ class WalletGeneratorApp:
     def generate_wallet_address(self, private_key):
         return private_key.Address()
 
+    def generate_qr_code(self, data):
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(data)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+        img.show()
+
+    def validate_mnemonic(self):
+        mnemonic = self.entry_mnemonic.get()
+        if mnemonic:
+            messagebox.showinfo("Validação", "A frase mnemônica é válida.")
+        else:
+            messagebox.showwarning("Aviso", "Insira uma frase mnemônica para validar.")
+
     def generate_and_display(self):
         mnemonic_phrase = self.entry_mnemonic.get()
 
@@ -57,6 +79,9 @@ class WalletGeneratorApp:
             # Exibe os resultados em uma janela pop-up
             result_text = f"Semente (Seed): {seed}\nChave Privada HD: {hd_key.WalletImportFormat().decode('utf-8')}\nEndereço de Carteira: {wallet_address}"
             messagebox.showinfo("Resultados", result_text)
+
+            # Gera QR Code para os resultados
+            self.generate_qr_code(result_text)
 
 if __name__ == "__main__":
     root = tk.Tk()
