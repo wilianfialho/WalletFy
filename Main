@@ -1,0 +1,30 @@
+from bip32utils import BIP32Key
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+from binascii import hexlify, unhexlify
+
+def generate_seed(mnemonic):
+    # Gera uma semente a partir da frase mnemônica
+    key = AES.new(mnemonic.encode('utf-8'), AES.MODE_ECB)
+    seed = hexlify(key.encrypt(get_random_bytes(16))).decode('utf-8')
+    return seed
+
+def derive_hd_key(seed, path='m/0/0'):
+    # Deriva uma chave HD a partir da semente e caminho especificado
+    root_key = BIP32Key.fromEntropy(unhexlify(seed))
+    derived_key = root_key.ChildKey(path)
+    return derived_key
+
+def generate_wallet_address(private_key):
+    # Gera um endereço de carteira a partir da chave privada
+    return private_key.Address()
+
+# Exemplo de uso:
+mnemonic_phrase = "sua frase mnemônica aqui"
+seed = generate_seed(mnemonic_phrase)
+hd_key = derive_hd_key(seed)
+wallet_address = generate_wallet_address(hd_key)
+
+print(f"Semente (Seed): {seed}")
+print(f"Chave Privada HD: {hd_key.WalletImportFormat().decode('utf-8')}")
+print(f"Endereço de Carteira: {wallet_address}")
