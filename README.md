@@ -2,7 +2,9 @@
 
 # WalletFy 
 
-Gerador de Endereços de Carteira HD em PythonO WalletFy é uma aplicação de desktop desenvolvida para facilitar a geração de endereços de carteira hierárquica (HD) em criptomoedas. Com uma interface amigável e funcionalidades úteis, o WalletFy utiliza as bibliotecas bip32utils, pycryptodome e qrcode para proporcionar uma experiência intuitiva aos usuários.
+O Gerador de Endereços de Carteira HD em Python WalletFy é uma aplicação de desktop desenvolvida para facilitar a geração de endereços de carteira hierárquica (HD) em criptomoedas. Com uma interface amigável e funcionalidades úteis, 
+
+o WalletFy utiliza as bibliotecas bip32utils, pycryptodome e qrcode para proporcionar uma experiência intuitiva aos usuários.
 
 ## Requisitos
 - Python 3.x
@@ -18,10 +20,10 @@ Geração de QR Code: Utilize o botão "Gerar QR Code" após gerar um endereço 
 
 ## Sugestões de Melhorias
 
-Suporte a uma variedade maior de criptomoedas.
-Escolha personalizada do caminho de derivação.
-Histórico de transações e visualização gráfica.
-Exportação/Importação de chaves privadas para facilitar o backup e a recuperação.
+- Suporte a uma variedade maior de criptomoedas.
+- Escolha personalizada do caminho de derivação.
+- Histórico de transações e visualização gráfica.
+- Exportação/Importação de chaves privadas para facilitar o backup e a recuperação.
 
 ## Contribuições
 
