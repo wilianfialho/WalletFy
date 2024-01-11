@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 from bip32utils import BIP32Key
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
@@ -9,18 +9,27 @@ import qrcode
 class WalletGeneratorApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Gerador de Endereços de Carteira HD")
+        self.root.title("Gerador de EndereÃ§os de Carteira HD")
 
-        self.label_mnemonic = tk.Label(root, text="Frase Mnemônica:")
+        # Labels, Entry e Buttons
+        self.label_mnemonic = tk.Label(root, text="Frase MnemÃ´nica:")
         self.entry_mnemonic = tk.Entry(root, width=40)
-        self.button_generate = tk.Button(root, text="Gerar Endereço", command=self.generate_and_display)
+        self.button_generate = tk.Button(root, text="Gerar EndereÃ§o", command=self.generate_and_display)
         self.button_validate = tk.Button(root, text="Validar Frase", command=self.validate_mnemonic)
+        self.button_save = tk.Button(root, text="Salvar Resultados", command=self.save_results)
 
-        # Configuração da interface gráfica
+        # Resultados - Adicionando aprimoramento de interface
+        self.label_result = tk.Label(root, text="Resultados:")
+        self.text_result = tk.Text(root, height=10, width=50, state=tk.DISABLED)
+
+        # ConfiguraÃ§Ã£o da interface grÃ¡fica
         self.label_mnemonic.grid(row=0, column=0, padx=10, pady=10, sticky=tk.W)
         self.entry_mnemonic.grid(row=0, column=1, padx=10, pady=10)
         self.button_generate.grid(row=1, column=0, columnspan=2, pady=10)
         self.button_validate.grid(row=2, column=0, columnspan=2, pady=5)
+        self.label_result.grid(row=3, column=0, padx=10, pady=5, sticky=tk.W)
+        self.text_result.grid(row=3, column=1, padx=10, pady=5)
+        self.button_save.grid(row=4, column=0, columnspan=2, pady=10)
 
     def generate_seed(self, mnemonic):
         try:
@@ -28,7 +37,7 @@ class WalletGeneratorApp:
             seed = hexlify(key.encrypt(get_random_bytes(16))).decode('utf-8')
             return seed
         except Exception as e:
-            messagebox.showerror("Erro", f"Erro na geração da semente: {str(e)}")
+            self.show_error("Erro na geraÃ§Ã£o da semente", e)
             return None
 
     def derive_hd_key(self, seed, path='m/0/0'):
@@ -37,7 +46,7 @@ class WalletGeneratorApp:
             derived_key = root_key.ChildKey(path)
             return derived_key
         except Exception as e:
-            messagebox.showerror("Erro", f"Erro na derivação da chave HD: {str(e)}")
+            self.show_error("Erro na derivaÃ§Ã£o da chave HD", e)
             return None
 
     def generate_wallet_address(self, private_key):
@@ -58,16 +67,15 @@ class WalletGeneratorApp:
     def validate_mnemonic(self):
         mnemonic = self.entry_mnemonic.get()
         if mnemonic:
-            messagebox.showinfo("Validação", "A frase mnemônica é válida.")
+            self.show_info("ValidaÃ§Ã£o", "A frase mnemÃ´nica Ã© vÃ¡lida.")
         else:
-            messagebox.showwarning("Aviso", "Insira uma frase mnemônica para validar.")
+            self.show_warning("Aviso", "Insira uma frase mnemÃ´nica para validar.")
 
     def generate_and_display(self):
         mnemonic_phrase = self.entry_mnemonic.get()
 
-        # Verifica se a frase mnemônica foi inserida
         if not mnemonic_phrase:
-            messagebox.showwarning("Aviso", "Insira uma frase mnemônica.")
+            self.show_warning("Aviso", "Insira uma frase mnemÃ´nica.")
             return
 
         seed = self.generate_seed(mnemonic_phrase)
@@ -76,12 +84,38 @@ class WalletGeneratorApp:
             hd_key = self.derive_hd_key(seed)
             wallet_address = self.generate_wallet_address(hd_key)
 
-            # Exibe os resultados em uma janela pop-up
-            result_text = f"Semente (Seed): {seed}\nChave Privada HD: {hd_key.WalletImportFormat().decode('utf-8')}\nEndereço de Carteira: {wallet_address}"
-            messagebox.showinfo("Resultados", result_text)
+            result_text = f"Semente (Seed): {seed}\nChave Privada HD: {hd_key.WalletImportFormat().decode('utf-8')}\nEndereÃ§o de Carteira: {wallet_address}"
 
-            # Gera QR Code para os resultados
+            self.update_result_text(result_text)
+            self.show_info("Resultados", result_text)
             self.generate_qr_code(result_text)
+
+    def save_results(self):
+        result_text = self.get_result_text()
+        if result_text:
+            file_path = filedialog.asksaveasfilename(defaultextension=".txt", filetypes=[("Text files", "*.txt")])
+            if file_path:
+                with open(file_path, 'w') as file:
+                    file.write(result_text)
+                self.show_info("Salvo com Sucesso", f"Resultados salvos em: {file_path}")
+
+    def get_result_text(self):
+        return self.text_result.get(1.0, tk.END)
+
+    def update_result_text(self, text):
+        self.text_result.config(state=tk.NORMAL)
+        self.text_result.delete(1.0, tk.END)
+        self.text_result.insert(tk.END, text)
+        self.text_result.config(state=tk.DISABLED)
+
+    def show_info(self, title, message):
+        messagebox.showinfo(title, message)
+
+    def show_warning(self, title, message):
+        messagebox.showwarning(title, message)
+
+    def show_error(self, title, message):
+        messagebox.showerror(title, message)
 
 if __name__ == "__main__":
     root = tk.Tk()
