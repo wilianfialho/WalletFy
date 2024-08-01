@@ -11,18 +11,21 @@ class WalletGeneratorApp:
         self.root = root
         self.root.title("Gerador de Endereços de Carteira HD")
 
+        # Configuração da interface gráfica
         self.label_mnemonic = tk.Label(root, text="Frase Mnemônica:")
         self.entry_mnemonic = tk.Entry(root, width=40)
         self.button_generate = tk.Button(root, text="Gerar Endereço", command=self.generate_and_display)
         self.button_validate = tk.Button(root, text="Validar Frase", command=self.validate_mnemonic)
 
-        # Configuração da interface gráfica
         self.label_mnemonic.grid(row=0, column=0, padx=10, pady=10, sticky=tk.W)
         self.entry_mnemonic.grid(row=0, column=1, padx=10, pady=10)
         self.button_generate.grid(row=1, column=0, columnspan=2, pady=10)
         self.button_validate.grid(row=2, column=0, columnspan=2, pady=5)
 
     def generate_seed(self, mnemonic):
+        """
+        Gera uma semente a partir da frase mnemônica.
+        """
         try:
             key = AES.new(mnemonic.encode('utf-8'), AES.MODE_ECB)
             seed = hexlify(key.encrypt(get_random_bytes(16))).decode('utf-8')
@@ -32,6 +35,9 @@ class WalletGeneratorApp:
             return None
 
     def derive_hd_key(self, seed, path='m/0/0'):
+        """
+        Deriva uma chave HD a partir da semente e do caminho especificado.
+        """
         try:
             root_key = BIP32Key.fromEntropy(unhexlify(seed))
             derived_key = root_key.ChildKey(path)
@@ -41,9 +47,15 @@ class WalletGeneratorApp:
             return None
 
     def generate_wallet_address(self, private_key):
+        """
+        Gera o endereço da carteira a partir da chave privada.
+        """
         return private_key.Address()
 
     def generate_qr_code(self, data):
+        """
+        Gera e exibe um QR Code para os dados fornecidos.
+        """
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -56,6 +68,9 @@ class WalletGeneratorApp:
         img.show()
 
     def validate_mnemonic(self):
+        """
+        Valida se a frase mnemônica está preenchida e apresenta uma mensagem ao usuário.
+        """
         mnemonic = self.entry_mnemonic.get()
         if mnemonic:
             messagebox.showinfo("Validação", "A frase mnemônica é válida.")
@@ -63,6 +78,9 @@ class WalletGeneratorApp:
             messagebox.showwarning("Aviso", "Insira uma frase mnemônica para validar.")
 
     def generate_and_display(self):
+        """
+        Gera e exibe a semente, chave privada e endereço da carteira, além de gerar um QR Code com as informações.
+        """
         mnemonic_phrase = self.entry_mnemonic.get()
 
         # Verifica se a frase mnemônica foi inserida
@@ -74,16 +92,16 @@ class WalletGeneratorApp:
 
         if seed:
             hd_key = self.derive_hd_key(seed)
-            wallet_address = self.generate_wallet_address(hd_key)
+            if hd_key:
+                wallet_address = self.generate_wallet_address(hd_key)
 
-            # Exibe os resultados em uma janela pop-up
-            result_text = f"Semente (Seed): {seed}\nChave Privada HD: {hd_key.WalletImportFormat().decode('utf-8')}\nEndereço de Carteira: {wallet_address}"
-            messagebox.showinfo("Resultados", result_text)
+                # Exibe os resultados em uma janela pop-up
+                result_text = (f"Semente (Seed): {seed}\n"
+                               f"Chave Privada HD: {hd_key.WalletImportFormat().decode('utf-8')}\n"
+                               f"Endereço de Carteira: {wallet_address}")
+                messagebox.showinfo("Resultados", result_text)
 
-            # Gera QR Code para os resultados
-            self.generate_qr_code(result_text)
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = WalletGeneratorApp(root)
-    root.mainloop()
+                # Gera QR Code para os resultados
+                self.generate_qr_code(result_text)
+            else:
+                messagebox.showwarning("Aviso", "Erro ao derivar a chave HD.")
